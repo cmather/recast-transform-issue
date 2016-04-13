@@ -1,0 +1,12 @@
+{
+  "name": "transform",
+  "version": "1.0.0",
+  "scripts": {
+    "start": "nodemon --ignore build transform.js"
+  },
+  "dependencies": {
+    "ast-types": "^0.8.16",
+    "nodemon": "^1.9.1",
+    "recast": "^0.11.4"
+  }
+}
