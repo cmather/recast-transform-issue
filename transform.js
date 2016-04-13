@@ -23,58 +23,13 @@ var fs = require('fs');
 var source = `f();`;
 var ast = recast.parse(source, { sourceFileName: 'em://app/app.js' });
 
-/**
- * Given "foo", [args] returns Runtime.call({name: "foo", func: foo, args:
- * [...]})
- */
-function buildRuntimeCallExpr (name, args) {
-  return b.callExpression(
-    b.memberExpression(
-      b.identifier('Runtime'),
-      b.identifier('call'),
-      false
-    ), [
-      b.objectExpression([
-        b.property('init', b.identifier('name'), b.literal(name)),
-        b.property('init', b.identifier('func'), b.identifier(name)),
-        b.property('init', b.identifier('args'), b.arrayExpression(args)),
-      ])
-    ]
-  );
-}
-
-/**
- * Given f() returns f().then(() => {})
- */
-function buildThenCallExpr (callExpr) {
-  return b.callExpression(
-    b.memberExpression(callExpr, b.identifier('then')), 
-    [
-      b.arrowFunctionExpression([/* args */], b.blockStatement([]))
-    ]
-  );
-}
-
-/**
- * Look for the call expression statements like f(n); and transform them to
- * Runtime.call({name: "f", func: f, args: [n]}).then(() => {}).
- */
-recast.visit(ast, {
-  visitExpressionStatement: function (path) {
-    if (path.get('expression', 'type').value == 'CallExpression') {
-      let funcName = path.node.expression.callee.name;
-      let args = path.node.expression.arguments;
-      let replace = buildThenCallExpr( buildRuntimeCallExpr(funcName, args) );
-      path.get('expression').replace(replace);
-    }
-
+types.visit(ast, {
+  visitCallExpression: function (path) {
+    // replacing callee seems to cause the location issue.
+    path.get('callee').replace(b.identifier('foo'));
     this.traverse(path);
   }
 });
-
-/**
- * Write the output to build/app.js and build/app.js.map.
- */
 
 var printed = recast.print(ast, { sourceMapName: 'app.js' });
 
